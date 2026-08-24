@@ -1,3 +1,4 @@
+import re
 import uuid
 from pathlib import Path
 
@@ -6,6 +7,13 @@ import memory
 import mesh
 import rag
 import tts
+
+
+
+
+def _safe_token(value: str) -> str:
+    token = re.sub(r"[^a-zA-Z0-9_-]", "_", value)
+    return token[:64] or "user"
 
 
 def _default_scheme(extracted_fields: dict) -> dict:
@@ -48,8 +56,9 @@ async def run_turn(user_id: str, transcript: str) -> dict:
     output_dir = Path(__file__).with_name("generated")
     output_dir.mkdir(exist_ok=True)
     turn_id = uuid.uuid4().hex
+    safe_user_id = _safe_token(user_id)
 
-    audio_path = str(output_dir / f"reply_{user_id}_{turn_id}.mp3")
+    audio_path = str(output_dir / f"reply_{safe_user_id}_{turn_id}.mp3")
     tts_path = tts.synthesize(response_text, audio_path)
 
     user_data = _build_user_data(user_id, extracted_fields)

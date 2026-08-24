@@ -1,4 +1,3 @@
-import asyncio
 import tempfile
 from pathlib import Path
 
