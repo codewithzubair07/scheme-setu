@@ -11,10 +11,10 @@
         .row { display: flex; gap: 16px; margin-bottom: 14px; }
         .field { flex: 1; }
         label { display: block; margin-bottom: 6px; font-weight: 600; }
-        input { width: 100%; padding: 10px; border: 1px solid #c9d1db; border-radius: 6px; box-sizing: border-box; }
+        .value { width: 100%; padding: 10px; border: 1px solid #c9d1db; border-radius: 6px; box-sizing: border-box; background: #fbfcfd; }
         .docs { margin-top: 20px; border: 1px solid #dfe4ea; padding: 14px; border-radius: 8px; }
         .docs h3 { margin-top: 0; }
-        .doc-item { margin: 8px 0; }
+        .docs ul { margin: 0; padding-left: 18px; }
         .footer-note { margin-top: 16px; color: #666; font-size: 12px; }
     </style>
 </head>
@@ -24,40 +24,47 @@
 
     <div class="row">
         <div class="field">
-            <label for="full_name">Full Name</label>
-            <input id="full_name" name="full_name" type="text" />
+            <label>Full Name</label>
+            <div class="value">{{full_name}}</div>
         </div>
         <div class="field">
-            <label for="aadhaar_number">Aadhaar Number</label>
-            <input id="aadhaar_number" name="aadhaar_number" type="text" />
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="field">
-            <label for="category">Category</label>
-            <input id="category" name="category" type="text" />
-        </div>
-        <div class="field">
-            <label for="annual_income">Annual Income (INR)</label>
-            <input id="annual_income" name="annual_income" type="text" />
+            <label>Aadhaar Number</label>
+            <div class="value">{{aadhaar_number}}</div>
         </div>
     </div>
 
     <div class="row">
         <div class="field">
-            <label for="state">State</label>
-            <input id="state" name="state" type="text" />
+            <label>Category</label>
+            <div class="value">{{category}}</div>
         </div>
         <div class="field">
-            <label for="scheme_name">Scheme Name</label>
-            <input id="scheme_name" name="scheme_name" type="text" />
+            <label>Annual Income (INR)</label>
+            <div class="value">{{annual_income}}</div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="field">
+            <label>State</label>
+            <div class="value">{{state}}</div>
+        </div>
+        <div class="field">
+            <label>Target</label>
+            <div class="value">{{scheme_name}}</div>
         </div>
     </div>
 
     <div class="docs">
         <h3>Documents Required</h3>
-        <div id="documents_container"></div>
+        <ul>
+            {{documents_html}}
+        </ul>
+    </div>
+
+    <div class="docs">
+        <h3>How to Apply (Mock Guidance)</h3>
+        <div>{{how_to_apply}}</div>
     </div>
 
     <div class="footer-note">This is a mock visual form for demonstration only.</div>
