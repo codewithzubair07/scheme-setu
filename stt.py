@@ -1,3 +1,4 @@
+import mimetypes
 import os
 
 import httpx
@@ -14,12 +15,12 @@ def transcribe(audio_file_path: str) -> str:
     base_url = _required_env("VOXTRAL_BASE_URL").rstrip("/")
     api_key = _required_env("VOXTRAL_API_KEY")
 
-    # Verify endpoint/response shape against current Voxtral docs.
     endpoint = f"{base_url}/v1/audio/transcriptions"
+    mime_type = mimetypes.guess_type(audio_file_path)[0] or "application/octet-stream"
     with open(audio_file_path, "rb") as audio_file:
-        files = {"file": (os.path.basename(audio_file_path), audio_file, "audio/ogg")}
+        files = {"file": (os.path.basename(audio_file_path), audio_file, mime_type)}
         data = {"model": "voxtral"}
-        headers = {"Authorization": f"Bearer {api_key}"}
+        headers = {"Authorization": f"******"}
         with httpx.Client(timeout=60.0) as client:
             response = client.post(endpoint, headers=headers, files=files, data=data)
 

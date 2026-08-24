@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scheme Setu Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f4f6fb; }
+    .app { max-width: 520px; margin: 0 auto; padding: 16px; }
+    h1 { font-size: 20px; margin-bottom: 8px; }
+    .card { background: #fff; border-radius: 10px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    textarea, input[type="text"] { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 8px; border: 1px solid #d1d5db; }
+    textarea { min-height: 88px; resize: vertical; }
+    .row { display: flex; gap: 8px; margin-top: 8px; }
+    button { flex: 1; border: 0; border-radius: 8px; padding: 10px; color: #fff; background: #1d4ed8; cursor: pointer; }
+    button.secondary { background: #059669; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    iframe { width: 100%; height: 420px; border: 1px solid #d1d5db; border-radius: 8px; }
+    .hint { color: #555; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>Scheme Setu</h1>
+    <div class="hint">Zero-auth browser demo</div>
+
+    <div class="card">
+      <label>User ID</label>
+      <input id="userId" type="text" value="demo-user" />
+      <label style="display:block;margin-top:10px;">Message</label>
+      <textarea id="messageInput" placeholder="Apni eligibility details likhiye..."></textarea>
+      <div class="row">
+        <button id="sendBtn">Send</button>
+        <button id="micBtn" class="secondary">Start Mic</button>
+      </div>
+      <div id="status" class="hint" style="margin-top:8px;"></div>
+    </div>
+
+    <div class="card">
+      <label>Reply</label>
+      <textarea id="replyText" readonly></textarea>
+      <label style="display:block;margin-top:10px;">Reply Audio</label>
+      <audio id="replyAudio" controls style="width:100%;"></audio>
+    </div>
+
+    <div class="card">
+      <label>Generated Form</label>
+      <iframe id="formFrame"></iframe>
+      <div style="margin-top:8px;"><a id="formLink" href="#" target="_blank">Open form in new tab</a></div>
+    </div>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const replyTextEl = document.getElementById('replyText');
+    const replyAudioEl = document.getElementById('replyAudio');
+    const formFrameEl = document.getElementById('formFrame');
+    const formLinkEl = document.getElementById('formLink');
+    const userIdEl = document.getElementById('userId');
+    const messageInputEl = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const micBtn = document.getElementById('micBtn');
+
+    let mediaRecorder;
+    let chunks = [];
+    let isRecording = false;
+
+    function applyResponse(payload) {
+      replyTextEl.value = payload.reply_text || '';
+      replyAudioEl.src = payload.reply_audio_url || '';
+      formFrameEl.src = payload.form_html_url || '';
+      formLinkEl.href = payload.form_html_url || '#';
+    }
+
+    async function sendMessage() {
+      const text = messageInputEl.value.trim();
+      if (!text) return;
+      statusEl.textContent = 'Sending text...';
+      sendBtn.disabled = true;
+      try {
+        const response = await fetch('/api/message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userIdEl.value.trim() || 'demo-user', text })
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.detail || 'Request failed');
+        applyResponse(payload);
+        statusEl.textContent = 'Done';
+      } catch (error) {
+        statusEl.textContent = error.message;
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    async function toggleMic() {
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          chunks = [];
+          mediaRecorder.ondataavailable = (event) => chunks.push(event.data);
+          mediaRecorder.onstop = uploadRecording;
+          mediaRecorder.start();
+          isRecording = true;
+          micBtn.textContent = 'Stop Mic';
+          statusEl.textContent = 'Recording...';
+        } catch (error) {
+          statusEl.textContent = 'Mic access failed';
+        }
+      } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        micBtn.textContent = 'Start Mic';
+      }
+    }
+
+    async function uploadRecording() {
+      statusEl.textContent = 'Uploading audio...';
+      const blob = new Blob(chunks, { type: chunks[0]?.type || 'audio/webm' });
+      const formData = new FormData();
+      formData.append('user_id', userIdEl.value.trim() || 'demo-user');
+      formData.append('file', blob, 'voice.webm');
+      try {
+        const response = await fetch('/api/voice', { method: 'POST', body: formData });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.detail || 'Voice request failed');
+        applyResponse(payload);
+        statusEl.textContent = 'Done';
+      } catch (error) {
+        statusEl.textContent = error.message;
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    micBtn.addEventListener('click', toggleMic);
+  </script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 import chromadb
 
+from certificates_data import CERTIFICATES
 from schemes_data import SCHEMES
 
 
@@ -84,3 +85,17 @@ def find_best_match(extracted_fields: dict, n_results: int = 3) -> list[dict]:
     if not metadatas or not metadatas[0]:
         return []
     return [_metadata_to_scheme(item) for item in metadatas[0]]
+
+
+def missing_certificates(scheme: dict, held: list[str]) -> list[dict]:
+    required_docs = [str(doc).lower() for doc in (scheme.get("documents_required") or [])]
+    held_normalized = {item.strip().lower() for item in (held or []) if item}
+
+    missing = []
+    for certificate in CERTIFICATES:
+        cert_name = certificate.get("name", "").lower()
+        cert_id = certificate.get("id", "").lower()
+        if any(cert_name in doc or cert_id.replace("_", " ") in doc for doc in required_docs):
+            if cert_name not in held_normalized and cert_id not in held_normalized:
+                missing.append(certificate)
+    return missing

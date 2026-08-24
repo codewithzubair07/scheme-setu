@@ -1,4 +1,6 @@
 import os
+import uuid
+from pathlib import Path
 
 import httpx
 
@@ -10,6 +12,12 @@ def _required_env(name: str) -> str:
     return value
 
 
+def _safe_output_path() -> Path:
+    output_dir = Path(__file__).with_name("generated")
+    output_dir.mkdir(exist_ok=True)
+    return output_dir / f"reply_{uuid.uuid4().hex}.mp3"
+
+
 def synthesize(text: str, output_path: str) -> str:
     api_key = _required_env("ELEVENLABS_API_KEY")
     voice_id = _required_env("ELEVENLABS_VOICE_ID")
@@ -19,7 +27,6 @@ def synthesize(text: str, output_path: str) -> str:
         "Content-Type": "application/json",
         "Accept": "audio/mpeg",
     }
-    # Verify request/response shape against current ElevenLabs docs.
     payload = {
         "text": text,
         "model_id": "eleven_multilingual_v2",
@@ -33,6 +40,8 @@ def synthesize(text: str, output_path: str) -> str:
             f"ElevenLabs TTS failed with status {response.status_code}: {response.text}"
         )
 
-    with open(output_path, "wb") as output_file:
+    _ = output_path
+    safe_output_path = _safe_output_path()
+    with open(safe_output_path, "wb") as output_file:
         output_file.write(response.content)
-    return output_path
+    return str(safe_output_path)
