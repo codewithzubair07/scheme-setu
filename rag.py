@@ -70,7 +70,17 @@ def _metadata_to_scheme(metadata: dict) -> dict:
 _bootstrap_collection()
 
 
-def find_best_match(extracted_fields: dict, n_results: int = 3) -> list[dict]:
+def find_best_match(
+    extracted_fields: dict, n_results: int = 3, max_distance: float = 1.08
+) -> list[dict]:
+    """Return schemes that are actually close to the query.
+
+    max_distance filters out weak/irrelevant matches so an out-of-scope
+    query returns an empty list instead of forcing the nearest-but-wrong
+    scheme. Chroma's default distance is smaller = closer; tune
+    max_distance for this dataset if real queries show it's too strict
+    or too loose.
+    """
     category = extracted_fields.get("category")
     income_lakh = extracted_fields.get("income_lakh")
     purpose = extracted_fields.get("purpose")
@@ -82,9 +92,15 @@ def find_best_match(extracted_fields: dict, n_results: int = 3) -> list[dict]:
     )
     result = collection.query(query_texts=[query], n_results=n_results)
     metadatas = result.get("metadatas", [[]])
+    distances = result.get("distances", [[]])
     if not metadatas or not metadatas[0]:
         return []
-    return [_metadata_to_scheme(item) for item in metadatas[0]]
+
+    matches = []
+    for metadata, distance in zip(metadatas[0], distances[0]):
+        if distance <= max_distance:
+            matches.append(_metadata_to_scheme(metadata))
+    return matches
 
 
 def missing_certificates(scheme: dict, held: list[str]) -> list[dict]:
