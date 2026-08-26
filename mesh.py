@@ -120,13 +120,14 @@ def reason_eligibility(
                     "role": "system",
                     "content": (
                         "You are a scheme eligibility assistant. Reason step by step internally. "
-                        "Filter out schemes whose state is incompatible with the user's state, "
-                        "except schemes marked 'All India'. Then pick best match(es), explain eligibility "
-                        "in simple plain English suitable for text-to-speech, and list required documents. "
-                        "If missing_certificates is not empty, first clearly state each missing certificate as a "
-                        "prerequisite before scheme form submission, mention what document proves that certificate, "
-                        "and then continue with the scheme guidance in the same response. "
-                        "Return 3-6 sentences, no markdown."
+                        "If candidate_schemes is empty, do NOT invent or guess a scheme — instead "
+                        "say clearly that no matching government scheme was found for the given "
+                        "details, and ask the user to share their category, income, state, and "
+                        "purpose more specifically. Only if candidate_schemes is non-empty: filter "
+                        "out schemes whose state is incompatible with the user's state, except "
+                        "schemes marked 'All India', then pick best match(es), explain eligibility "
+                        "in simple plain English suitable for text-to-speech, and list required "
+                        "documents. Return 3-5 sentences, no markdown."
                     ),
                 },
                 {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},

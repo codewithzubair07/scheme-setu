@@ -41,23 +41,23 @@ async def run_turn(user_id: str, transcript: str) -> dict:
     extracted_fields = mesh.extract_fields(transcript, prior_fields)
 
     matched_schemes = rag.find_best_match(extracted_fields)
-    best_scheme = matched_schemes[0] if matched_schemes else _default_scheme(extracted_fields)
-
     held_certificates = extracted_fields.get("held_certificates") or []
-    if matched_schemes:
-        missing = rag.missing_certificates(best_scheme, held_certificates)
-        response_text = mesh.reason_eligibility(
-            extracted_fields,
-            matched_schemes,
-            missing_certificates=missing,
-        )
-    else:
+    if not matched_schemes:
+        best_scheme = _default_scheme(extracted_fields)
         missing = []
         response_text = (
             "I couldn't find a government scheme matching that in my current dataset. "
             "Try describing your situation more specifically — your category "
             "(SC/ST/OBC/General/Minority), approximate family income, and what "
             "the support is for (education, health, housing, etc.)."
+        )
+    else:
+        best_scheme = matched_schemes[0]
+        missing = rag.missing_certificates(best_scheme, held_certificates)
+        response_text = mesh.reason_eligibility(
+            extracted_fields,
+            matched_schemes,
+            missing_certificates=missing,
         )
     await memory.save_turn(user_id, transcript, extracted_fields, response_text)
 
