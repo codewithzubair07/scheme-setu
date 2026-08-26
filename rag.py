@@ -71,7 +71,7 @@ _bootstrap_collection()
 
 
 def find_best_match(
-    extracted_fields: dict, n_results: int = 3, max_distance: float = 1.08
+    extracted_fields: dict, n_results: int = 3, max_distance: float = 1.2
 ) -> list[dict]:
     """Return schemes that are actually close to the query.
 
